@@ -1,0 +1,366 @@
+#! /bin/bash
+
+function signup_login()
+{
+clear
+sleep 1.200
+valid=true
+while [ $valid ]
+do
+echo "usage: todo [option] "
+echo " login"
+echo " sign up"
+echo
+read -p "TDOD APP ~>>  " item </dev/tty
+if [[ ($item == "todo login") ]];
+then
+clear
+echo -n " be patient ."
+sleep 0.500
+echo -n "."
+sleep 0.500
+echo -n "."
+sleep 0.500
+echo -n "."
+sleep 0.500
+clear
+login
+break
+
+elif [[ ($item == "todo sign up") ]]; then
+clear
+echo -n " preparing to register"
+echo -n "."
+sleep 0.500
+echo -n "."
+sleep 0.500
+echo -n "."
+sleep 0.500
+echo -n "."
+sleep 0.500
+echo -n "."
+sleep 0.500
+clear
+sign_up
+break
+
+else
+echo -n " invalid command"
+sleep 1.300
+clear
+fi
+done
+}
+
+
+function login()
+{
+valid=true
+while [ $valid ]
+do
+read -p " username: " inputUsername
+read -s -p " password: " inputPassword
+stringCheck=$inputUsername+$inputPassword
+userPassFile='Username_Password.txt'
+while read check; do
+if [[ ($check == $stringCheck) ]]; then
+cd /home/linuxamir/Desktop/TODO/$inputUsername
+clear
+mainMenu
+break
+fi
+done < $userPassFile
+echo
+echo
+echo "  username or password invalid"
+sleep 1
+clear
+done
+}
+
+
+
+function sign_up()
+{
+for (( ; ; ))
+do
+if [[ -f "Username_Password" ]]; then
+echo -n ""
+else
+touch Username_Password.txt
+fi
+read -p " user name: " inputUsername
+if [[ -d "$inputUsername" ]]; then
+echo
+echo -n "  this username already taken"
+sleep 0.500
+clear
+continue
+
+else
+read -s -p " Password: " password
+stringCheck=$inputUsername+$password
+echo "$stringCheck" >> Username_Password.txt
+mkdir -p $inputUsername
+echo
+echo "  sign up successfully!"
+cp Menu.txt $inputUsername
+cd /home/linuxamir/Desktop/TODO/$inputUsername
+touch In_progress.txt
+touch Cmplt.txt
+touch All.txt
+sleep 1.300
+clear
+mainMenu
+break
+fi
+done
+}
+
+
+function addNewTask()
+{
+echo
+for (( ; ; ))
+do
+read -p " title: " title </dev/tty
+echo  "name:" $title "       --->>>--<>--<<<---       " "status": "not started" >> All.txt
+read -p " add more?(y/N)" choice </dev/tty
+if [[ $choice == "y" || $choice == "Y" || $choice == "" ]]; then
+clear
+continue
+elif [[ $choice == "n" || $choice == "N" ]]; then
+clear
+sleep 0.700
+mainMenu
+break
+else
+echo "  invalid command"
+clear
+sleep 1.300
+fi
+done
+}
+
+
+function editStatus()
+{
+sleep 0.500
+for (( ; ; ))
+do
+
+[ -s All.txt ] && echo " your list" || echo "***your list is empty***"
+echo
+((count=0))
+file='All.txt'
+while read line; do
+((count++))
+echo "$count""- ""$line"
+done < $file
+if [[ ($count == 0) ]]; then
+sleep 1
+clear
+task_manager
+break
+fi
+
+echo
+read -p " number of line for edit ~>> " number </dev/tty
+clear
+echo -n " "
+awk '{if(NR=='$number') print $0}' All.txt
+echo
+filename="All.txt"
+
+echo "--help"
+read -p " new title: " newTitle </dev/tty
+
+if [[ ($newTitle == "--help") ]]; then
+clear
+echo "status command"
+echo " ip            #in progress"
+echo " cmplt         #complted"
+echo
+read -p " press enter to back" key </dev/tty
+clear
+sleep 0.300
+continue
+fi
+
+read -p " new status: " newStatus </dev/tty
+if [[ ($newStatus == "--help") ]]; then
+clear
+echo "status command"
+echo " ip            #in progress"
+echo " cmplt         #complted"
+echo
+read -p "press enter to back" key </dev/tty
+clear
+sleep 0.300
+continue
+fi
+
+echo
+if [[ ($newStatus == "ip" ) ]]; then
+echo  "name:" $newTitle "       --->>>--<>--<<<---       " "status": "in progress" >> In_progress.txt
+sed -i ''$number'd' ./All.txt
+clear
+task_manager
+break
+elif [[ ($newStatus == "cmplt") ]]; then
+echo  "name:" $newTitle "       --->>>--<>--<<<---       " "status": "completed" >> Cmplt.txt
+sed -i ''$number'd' ./In_progress.txt
+clear
+task_manager
+break
+else
+echo "  invalid command"
+clear
+sleep 0.500
+fi
+done
+}
+
+function task_manager()
+{
+valid=true
+while [ $valid ]
+do
+echo "usage: todo [option]"
+echo " add "
+echo " edit"
+echo " back"
+echo
+read -p 'TDOD APP ~>> ' item </dev/tty
+if [[ ($item == "todo add") ]]; then
+clear
+addNewTask
+break
+elif [[ ($item == "todo edit") ]]; then
+clear
+editStatus
+break
+elif [[ ($item == "todo back") ]]; then
+clear
+mainMenu
+else
+echo "  invalid command"
+sleep 0.500
+clear
+fi
+done
+}
+
+
+function mainMenu()
+{
+for (( ; ; ))
+do
+echo "usage: todo [option]"
+file='Menu.txt'
+while read line; do
+echo " "$line
+done < $file
+read -p 'TDOD APP ~>> ' item </dev/tty
+clear
+if [[ ($item == "todo see all") ]]; then
+[ -s All.txt ] && echo " your list" || echo "***your list is empty***"
+((count=0))
+while IFS= read -r line; do
+((count++))
+ echo $count"- ""$line";
+done < All.txt
+
+if [[ ($count == 0) ]]; then
+sleep 1
+clear
+mainMenu
+break
+fi
+
+elif [[ $item == "todo see cmplt" ]]; then
+[ -s Cmplt.txt ] && echo " your list" || echo "***your list is empty***"
+((count=0))
+while IFS= read -r line; do
+((count++))
+ echo $count"- ""$line";
+done < Cmplt.txt
+
+if [[ ($count == 0) ]]; then
+sleep 1
+clear
+mainMenu
+break
+fi
+
+elif [[ $item == "todo see ip"  ]]; then
+[ -s In_progress.txt ] && echo " your list" || echo "***your list is empty***"
+((count=0))
+while IFS= read -r line; do
+((count++))
+ echo $count"- ""$line";
+ done < In_progress.txt
+
+if [[ ($count == 0) ]]; then
+sleep 1
+clear
+mainMenu
+break
+fi
+
+elif [[ $item == "todo manage" ]]; then
+task_manager
+elif [[ $item == "todo exit" ]]; then
+clear
+sleep 0.400
+echo -n "G"
+sleep 0.500
+echo -n "O"
+sleep 0.400
+echo -n "O"
+sleep 0.500
+echo -n "D"
+echo -n " "
+sleep 0.400
+echo -n "B"
+sleep 0.500
+echo -n "Y"
+sleep 0.400
+echo "E"
+sleep 0.500
+exit 1
+
+else
+echo "  invalid command"
+sleep 0.500
+clear
+continue
+fi
+echo
+read -p " press enter to back " back </dev/tty
+if [[ ($back == "") ]]; then
+sleep 0.500
+clear
+continue
+else
+clear
+sleep 0.500
+fi
+clear
+done
+}
+
+clear
+echo -ne '#####################   (14%)\r'
+sleep 0.700
+echo -ne '###################################   (33%)\r'
+sleep 1
+echo -ne '#################################################   (55%)\r'
+sleep 0.500
+echo -ne '####################################################################   (66%)\r'
+sleep 1
+echo -ne '###############################################################################################   (100%)\r'
+sleep 0.700
+echo -ne '\n'
+signup_login
+
